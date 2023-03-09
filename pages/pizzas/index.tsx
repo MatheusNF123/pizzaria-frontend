@@ -1,11 +1,12 @@
 import { GetStaticProps } from "next";
 import Head from "next/head";
-import { Box, Grid } from "@mui/material";
+import { Box, Grid, Container } from "@mui/material";
 
 import { getRequest } from "../../src/services/api";
 import PizzaCard from "../../src/components/pizzaCard";
 import Header from "../../src/components/header";
 import { Pizza } from "../../src/Types";
+import Layout from "../../src/components/layout";
 
 type HomeProps = {
   pizzas: Pizza[];
@@ -13,14 +14,11 @@ type HomeProps = {
 
 export default function Pizzas({ pizzas }: HomeProps) {
   return (
-    <>
-      <Head>
-        <title>Pizzas</title>
-      </Head>
-      <Header />
-      <Box
+    <Layout title="Pizzas">
+      <Container
+        maxWidth="xl"
         sx={{
-          backgroundColor: "GrayText",
+          // height: "100%",
           minHeight: "100vh",
           padding: "20px",
         }}
@@ -30,16 +28,28 @@ export default function Pizzas({ pizzas }: HomeProps) {
             <PizzaCard info={pizza} key={pizza.id} />
           ))}
         </Grid>
-      </Box>
-    </>
+      </Container>
+    </Layout>
   );
 }
 
 export const getStaticProps: GetStaticProps = async () => {
-  const { data } = await getRequest("pizzas");
+  try {
+    const { status, data } = await getRequest("pizzas");
 
-  return {
-    props: { pizzas: data },
-    revalidate: 60 * 60,
-  };
+    if (status !== 200) {
+      return {
+        props: { pizzas: [] },
+      };
+    }
+
+    return {
+      props: { pizzas: data },
+      revalidate: 60 * 60,
+    };
+  } catch (error) {
+    return {
+      props: { pizzas: [] },
+    };
+  }
 };
